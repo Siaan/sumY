@@ -374,11 +374,21 @@
             <a href="/">sumy</a>
           </div>
 
+          <br>
+          <br>
+
+          <center><h1>Summarize</h1></center>
+
+          <ul class="nav">
+
+            <li><a href="{{ url_for('dashboard') }}">Back</a></li>
+
+          </ul>
 
         </div>
 
-
-        <div class="description">Analyze the file below: </div>
+        <center>
+        <div class="description">Summarize the file below: </div>
 
 
           <div class="container">
@@ -388,12 +398,12 @@
                   <form method=post action="/analyze">
                     Filename <br>
                     <input type="text" name="filename" value="Filename"><br>
-                    <button type="submit" class="btn btn-primary btn-block">Analyze</button>
+                    <button type="submit" class="btn btn-primary btn-block">Summarize</button>
                   </form>
                 </div>
             </div>
           </div>
-
+        </center>
 
 
 

@@ -63,6 +63,7 @@ a:focus {
     left: 0;
     /* top layer */
     z-index: 9999;
+    background: #7386D5;
 }
 
 .overlay {

@@ -28,15 +28,20 @@ def transcribe_gcs(gcs_uri):
     print('Waiting for operation to complete...')
     response = operation.result(timeout=90)
 
-    output = []
+    output_list = []
     # Each result is for a consecutive portion of the audio. Iterate through
     # them to get the transcripts for the entire audio file.
     for result in response.results:
         # The first alternative is the most likely one for this portion.
         print(u'Transcript: {}'.format(result.alternatives[0].transcript))
         print('Confidence: {}'.format(result.alternatives[0].confidence))
-        output.append(result.alternatives[0].transcript)
+        output_list.append(result.alternatives[0].transcript)
 
+    output =""
+
+    for out in output_list:
+        output+=out
+        output+="."
     return output
 
 def cut_data(wav_file):

@@ -6,6 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 import cloud
 import speechToText
+import sumy
 
 UPLOAD_FOLDER = './data'
 ALLOWED_EXTENSIONS = set(['wav'])
@@ -28,7 +29,7 @@ mongo = PyMongo(app)
 
 @app.route('/')
 def index():
-  return render_template('index.html')
+  return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -79,7 +80,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
+def upload():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
@@ -105,7 +106,25 @@ def analyze():
     if request.method == 'POST':
         # check if the post request has the file part
         #This part should have the data
-        speechToText.generate_analysis('sumy',request.form['filename'])
+
+        #Saving to a temporary place
+        output_string = speechToText.generate_analysis('sumy',request.form['filename'])
+        with open("./textfiles/temp.txt","w+") as f:
+            f.write(output_string)
+
+        #Reading and cleaning
+        content = sumy.read_file("./static/textfiles/temp.txt")
+        content = sumy.sanitize_input(content)
+
+        #Tokenizing and summarizing
+        sentence_tokens, word_tokens = sumy.tokenize_content(content)
+        sentence_ranks = sumy.score_tokens(word_tokens, sentence_tokens)
+        output_summary = sumy.summarize(sentence_ranks, sentence_tokens, 3)
+        with open("./static/textfiles/summary.txt","w+") as f:
+            f.write(output_summary)
+
+        #Written to a textfile
+
         return redirect(url_for('dashboard'))
     return render_template('analyze.html')
 

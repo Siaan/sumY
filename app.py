@@ -1,9 +1,17 @@
-from flask import Flask, render_template, url_for, request, session, redirect
+from flask import Flask, render_template, url_for, request, session, redirect, flash
 from flask_pymongo import PyMongo
 from flask_bootstrap import Bootstrap
 import bcrypt
+import os
+from werkzeug.utils import secure_filename
+import cloud
+import speechToText
+
+UPLOAD_FOLDER = './data'
+ALLOWED_EXTENSIONS = set(['wav'])
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['MONGO_DBNAME']='landan'
 app.config['MONGO_URI']='mongodb://check:cheeky1@ds026898.mlab.com:26898/landan'
@@ -66,10 +74,44 @@ def logout():
 def dashboard():
   return render_template('dashboard.html', name=session['username'])
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            gcs_uploader = cloud.Cloud()
+            gcs_uploader.upload_blob("sumy",'{}/{}'.format(app.config['UPLOAD_FOLDER'],filename),filename)
+            return redirect(url_for('dashboard',
+                                    filename=filename))
+    return render_template('upload.html')
+
+@app.route('/analyze', methods=['GET', 'POST'])
+def analyze():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        #This part should have the data
+        speechToText.generate_analysis('sumy',request.form['filename'])
+        return redirect(url_for('dashboard'))
+    return render_template('analyze.html')
+
 @app.route('/about')
 def about():
   return render_template('about.html')
-
 
 if __name__ == '__main__':
   app.run('0.0.0.0',debug=True)
